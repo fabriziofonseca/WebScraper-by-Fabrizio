@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import os
+import csv
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from urllib.parse import urljoin, urlparse
@@ -51,6 +52,9 @@ class WebScraperApp:
         # Stop Button
         tk.Button(root, text="Stop Scraping", command=self.stop_scraping).grid(row=row+1, column=2)
 
+        # Export to CSV Button
+        tk.Button(root, text="Export TXT to CSV", command=self.export_to_csv).grid(row=row+1, column=3)
+
         # Status Log
         tk.Label(root, text="Scraping Log:").grid(row=row+2, column=0)
         self.log = tk.Text(root, height=10, width=75)
@@ -61,6 +65,7 @@ class WebScraperApp:
 
     def browse_directory(self):
         directory = filedialog.askdirectory()
+        self.directory_entry.delete(0, tk.END)
         self.directory_entry.insert(0, directory)
 
     def select_all_file_types(self):
@@ -98,8 +103,6 @@ class WebScraperApp:
             if 'txt' in file_types:
                 self.download_text(url, directory, soup)
 
-            # Add logic for other file types here
-
             # Update log
             self.log.insert(tk.END, f"Scraped {url}\n")
             self.root.update()
@@ -120,12 +123,36 @@ class WebScraperApp:
             return None
 
     def download_text(self, url, directory, soup):
-        text = soup.get_text(separator='\n', strip=True)
+        # Target specific tags for main content
+        main_content_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'article']
+        main_content = soup.find_all(main_content_tags)
+        text = '\n'.join([element.get_text(separator='\n', strip=True) for element in main_content])
+
         filename = urlparse(url).path.strip("/").replace("/", "_") or "index"
         filepath = os.path.join(directory, f"{filename}.txt")
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(text)
         self.log.insert(tk.END, f"Downloaded text to {filepath}\n")
+
+    def export_to_csv(self):
+        directory = self.directory_entry.get()
+        if not os.path.exists(directory):
+            messagebox.showerror("Error", "Directory does not exist.")
+            return
+
+        csv_file = os.path.join(directory, "exported_texts.csv")
+        with open(csv_file, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Filename', 'Content'])
+
+            for filename in os.listdir(directory):
+                if filename.endswith('.txt'):
+                    filepath = os.path.join(directory, filename)
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    writer.writerow([filename, content])
+
+        self.log.insert(tk.END, f"Exported text files to {csv_file}\n")
 
 if __name__ == "__main__":
     root = tk.Tk()
