@@ -6,3 +6,8 @@ Just add the URL. The depth of the scrap. The folder and the formats you want. T
 Built using Beautiful Soap, Requests and Tkinter.
 
 ![image](https://github.com/fabriziofonseca/WebScraper-by-Fabrizio/assets/140287340/d227ad97-0716-4b8a-b4db-94446d2a065b)
+
+New Version!! 
+
+New it can export data to an Excel file if you are scraping .txt files
+New system to avoid adds and useless information 
